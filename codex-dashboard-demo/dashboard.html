@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wine Classification Dashboard</title>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --panel: #ffffff;
+      --panel-alt: #eef4ff;
+      --text: #10233f;
+      --muted: #5b6b82;
+      --line: #d8e1ef;
+      --accent: #0f766e;
+      --accent-2: #1d4ed8;
+      --accent-3: #d97706;
+      --danger: #b91c1c;
+      --shadow: 0 20px 50px rgba(15, 35, 63, 0.08);
+      --radius: 22px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Noto Sans KR", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(29, 78, 216, 0.12), transparent 28%),
+        radial-gradient(circle at top right, rgba(15, 118, 110, 0.10), transparent 24%),
+        linear-gradient(180deg, #f7faff 0%, #eff4fb 100%);
+    }
+
+    .page {
+      width: min(1200px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 40px 0 56px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 58%, #0f766e 100%);
+      color: #fff;
+      border-radius: 30px;
+      padding: 36px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -80px -90px auto;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .eyebrow {
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.78;
+      margin-bottom: 10px;
+    }
+
+    h1, h2, h3, p {
+      margin: 0;
+    }
+
+    .hero h1 {
+      font-size: clamp(30px, 4vw, 44px);
+      line-height: 1.1;
+      margin-bottom: 14px;
+    }
+
+    .hero p {
+      max-width: 760px;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+      margin-top: 22px;
+    }
+
+    .grid-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid rgba(216, 225, 239, 0.9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+
+    .metric-card {
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    }
+
+    .metric-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .metric-value {
+      font-size: clamp(28px, 3vw, 36px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 6px;
+    }
+
+    .metric-note {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .section-title {
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+
+    .section-subtitle {
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .meta-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .meta-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .meta-label {
+      color: var(--muted);
+    }
+
+    .meta-value {
+      text-align: right;
+      font-weight: 600;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--panel-alt);
+      color: var(--accent-2);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 480px;
+      background: #fff;
+    }
+
+    th, td {
+      padding: 14px 16px;
+      text-align: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    th {
+      background: #f8fbff;
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    td:first-child, th:first-child {
+      text-align: left;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .chart-card canvas {
+      width: 100%;
+      max-width: 100%;
+      display: block;
+    }
+
+    .insight-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .insight {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #f8fbff;
+      border: 1px solid var(--line);
+      line-height: 1.6;
+      color: #173055;
+    }
+
+    .footer {
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    @media (max-width: 960px) {
+      .grid-4,
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .page {
+        width: min(100vw - 20px, 1200px);
+        padding-top: 20px;
+      }
+
+      .hero,
+      .card {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <div class="eyebrow">ML Presentation Dashboard</div>
+      <h1>Wine 데이터셋 분류 성능 대시보드</h1>
+      <p>
+        `results.json` 기반으로 LogisticRegression + StandardScaler 모델의 교차검증 결과와
+        테스트 성능을 한 페이지에 정리했습니다. 발표 시에는 전체 정확도뿐 아니라 클래스별
+        정밀도, 재현율, F1-score, 혼동 행렬을 함께 보여 주는 것이 설득력에 유리합니다.
+      </p>
+    </section>
+
+    <section class="grid grid-4">
+      <article class="card metric-card">
+        <div class="metric-label">데이터셋 / 샘플 수</div>
+        <div class="metric-value">Wine</div>
+        <div class="metric-note">총 178개 샘플</div>
+      </article>
+      <article class="card metric-card">
+        <div class="metric-label">모델</div>
+        <div class="metric-value" style="font-size: 24px;">LogisticRegression</div>
+        <div class="metric-note">StandardScaler 포함 Pipeline</div>
+      </article>
+      <article class="card metric-card">
+        <div class="metric-label">Feature 수</div>
+        <div class="metric-value">13</div>
+        <div class="metric-note">화학 성분 기반 분류</div>
+      </article>
+      <article class="card metric-card">
+        <div class="metric-label">테스트 정확도</div>
+        <div class="metric-value">97.22%</div>
+        <div class="metric-note">36개 테스트 샘플 기준</div>
+      </article>
+    </section>
+
+    <section class="grid grid-2">
+      <article class="card">
+        <div class="pill">모델 개요</div>
+        <h2 class="section-title" style="margin-top: 14px;">실험 설정</h2>
+        <p class="section-subtitle">
+          발표에서는 데이터 규모, 모델 구조, 분할 기준을 먼저 보여 주면 결과 해석의 전제가 명확해집니다.
+        </p>
+        <div class="meta-list">
+          <div class="meta-row"><span class="meta-label">데이터셋</span><span class="meta-value">Wine</span></div>
+          <div class="meta-row"><span class="meta-label">모델</span><span class="meta-value">LogisticRegression + StandardScaler</span></div>
+          <div class="meta-row"><span class="meta-label">전체 샘플 수</span><span class="meta-value">178</span></div>
+          <div class="meta-row"><span class="meta-label">Feature 수</span><span class="meta-value">13</span></div>
+          <div class="meta-row"><span class="meta-label">Train / Test</span><span class="meta-value">142 / 36</span></div>
+          <div class="meta-row"><span class="meta-label">Random State</span><span class="meta-value">42</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="pill">교차검증</div>
+        <h2 class="section-title" style="margin-top: 14px;">검증 요약</h2>
+        <p class="section-subtitle">
+          RepeatedStratifiedKFold(5 splits, 5 repeats) 기준 평균 정확도와 분산을 확인했습니다.
+        </p>
+        <div class="meta-list">
+          <div class="meta-row"><span class="meta-label">평균 정확도</span><span class="meta-value">98.17%</span></div>
+          <div class="meta-row"><span class="meta-label">표준편차</span><span class="meta-value">2.23%</span></div>
+          <div class="meta-row"><span class="meta-label">OOF 정확도</span><span class="meta-value">97.89%</span></div>
+          <div class="meta-row"><span class="meta-label">간단 해석</span><span class="meta-value">평균 성능이 높고 편차가 작아 안정적</span></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="grid grid-2">
+      <article class="card chart-card">
+        <h2 class="section-title">클래스별 성능 비교</h2>
+        <p class="section-subtitle">
+          테스트셋의 precision, recall, f1-score를 bar chart로 비교했습니다.
+        </p>
+        <canvas id="metricChart" height="320"></canvas>
+      </article>
+
+      <article class="card chart-card">
+        <h2 class="section-title">Confusion Matrix</h2>
+        <p class="section-subtitle">
+          테스트셋 혼동 행렬입니다. 대부분 정확히 분류되었고, class_2에서 1건이 class_1로 오분류되었습니다.
+        </p>
+        <canvas id="matrixChart" height="320"></canvas>
+      </article>
+    </section>
+
+    <section class="grid grid-2">
+      <article class="card">
+        <h2 class="section-title">Classification Report</h2>
+        <p class="section-subtitle">
+          테스트셋 기준 각 클래스의 precision / recall / f1-score / support를 정리했습니다.
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Class</th>
+                <th>Precision</th>
+                <th>Recall</th>
+                <th>F1-score</th>
+                <th>Support</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>class_0</td>
+                <td>1.000</td>
+                <td>1.000</td>
+                <td>1.000</td>
+                <td>12</td>
+              </tr>
+              <tr>
+                <td>class_1</td>
+                <td>0.933</td>
+                <td>1.000</td>
+                <td>0.966</td>
+                <td>14</td>
+              </tr>
+              <tr>
+                <td>class_2</td>
+                <td>1.000</td>
+                <td>0.900</td>
+                <td>0.947</td>
+                <td>10</td>
+              </tr>
+              <tr>
+                <td>macro avg</td>
+                <td>0.978</td>
+                <td>0.967</td>
+                <td>0.971</td>
+                <td>36</td>
+              </tr>
+              <tr>
+                <td>weighted avg</td>
+                <td>0.974</td>
+                <td>0.972</td>
+                <td>0.972</td>
+                <td>36</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2 class="section-title">해석 및 발표 포인트</h2>
+        <p class="section-subtitle">
+          과적합 가능성, 일반화 성능, 신뢰도, 개선 방향을 함께 설명할 수 있도록 정리했습니다.
+        </p>
+        <div class="insight-list">
+          <div class="insight">
+            교차검증 평균 정확도는 <strong>98.17%</strong>, 테스트 정확도는 <strong>97.22%</strong>로 차이가 약
+            <strong>0.95%p</strong>에 불과합니다. 훈련 데이터에만 과도하게 맞춘 과적합 징후는 크지 않습니다.
+          </div>
+          <div class="insight">
+            교차검증과 테스트 성능이 모두 높고, 교차검증 표준편차가 <strong>2.23%</strong>로 낮은 편이라
+            데이터 분할이 달라져도 성능이 급격히 흔들릴 가능성은 낮습니다.
+          </div>
+          <div class="insight">
+            클래스별로는 <strong>class_2의 recall 0.900</strong>이 상대적으로 낮습니다. 일부 샘플이 class_1과
+            경계가 겹칠 수 있음을 시사하며, 오분류 패턴은 confusion matrix에서도 확인됩니다.
+          </div>
+          <div class="insight">
+            모델 성능의 신뢰도는 전반적으로 높다고 평가할 수 있습니다. 다만 Wine 데이터셋 자체가 작은 편이므로,
+            더 많은 데이터 확보, 하이퍼파라미터 탐색, SVM·RandomForest·XGBoost 같은 다른 모델 비교가
+            다음 개선 방향이 될 수 있습니다.
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <div class="footer">Generated from results.json | LogisticRegression + StandardScaler on Wine dataset</div>
+  </div>
+
+  <script>
+    const results = {
+      classNames: ["class_0", "class_1", "class_2"],
+      testMetrics: {
+        precision: [1.0, 0.9333333333333333, 1.0],
+        recall: [1.0, 1.0, 0.9],
+        f1: [1.0, 0.9655172413793104, 0.9473684210526315]
+      },
+      confusionMatrix: [
+        [12, 0, 0],
+        [0, 14, 0],
+        [0, 1, 9]
+      ]
+    };
+
+    function drawBarChart() {
+      const canvas = document.getElementById("metricChart");
+      const ctx = canvas.getContext("2d");
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = 320 * dpr;
+      ctx.scale(dpr, dpr);
+
+      const width = rect.width;
+      const height = 320;
+      const padding = { top: 24, right: 20, bottom: 54, left: 44 };
+      const chartWidth = width - padding.left - padding.right;
+      const chartHeight = height - padding.top - padding.bottom;
+      const colors = ["#1d4ed8", "#0f766e", "#d97706"];
+      const labels = ["Precision", "Recall", "F1-score"];
+      const series = [results.testMetrics.precision, results.testMetrics.recall, results.testMetrics.f1];
+
+      ctx.clearRect(0, 0, width, height);
+      ctx.font = "12px Segoe UI";
+      ctx.fillStyle = "#5b6b82";
+      ctx.strokeStyle = "#d8e1ef";
+
+      for (let i = 0; i <= 5; i++) {
+        const y = padding.top + chartHeight - (chartHeight / 5) * i;
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(width - padding.right, y);
+        ctx.stroke();
+        ctx.fillText((i * 0.2).toFixed(1), 10, y + 4);
+      }
+
+      const groupWidth = chartWidth / results.classNames.length;
+      const barWidth = 20;
+
+      results.classNames.forEach((className, classIndex) => {
+        const centerX = padding.left + groupWidth * classIndex + groupWidth / 2;
+
+        series.forEach((values, metricIndex) => {
+          const value = values[classIndex];
+          const barHeight = chartHeight * value;
+          const x = centerX - 34 + metricIndex * 24;
+          const y = padding.top + chartHeight - barHeight;
+
+          ctx.fillStyle = colors[metricIndex];
+          ctx.fillRect(x, y, barWidth, barHeight);
+          ctx.fillStyle = "#10233f";
+          ctx.font = "11px Segoe UI";
+          ctx.fillText(value.toFixed(3), x - 2, y - 8);
+        });
+
+        ctx.fillStyle = "#10233f";
+        ctx.font = "12px Segoe UI";
+        ctx.fillText(className, centerX - 22, height - 20);
+      });
+
+      labels.forEach((label, index) => {
+        const x = padding.left + index * 120;
+        ctx.fillStyle = colors[index];
+        ctx.fillRect(x, 8, 14, 14);
+        ctx.fillStyle = "#10233f";
+        ctx.font = "12px Segoe UI";
+        ctx.fillText(label, x + 22, 20);
+      });
+    }
+
+    function drawMatrixChart() {
+      const canvas = document.getElementById("matrixChart");
+      const ctx = canvas.getContext("2d");
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = 320 * dpr;
+      ctx.scale(dpr, dpr);
+
+      const width = rect.width;
+      const height = 320;
+      const size = Math.min(width - 110, height - 90);
+      const startX = 70;
+      const startY = 34;
+      const cell = size / 3;
+      const maxValue = Math.max(...results.confusionMatrix.flat());
+
+      ctx.clearRect(0, 0, width, height);
+      ctx.font = "12px Segoe UI";
+      ctx.fillStyle = "#5b6b82";
+      ctx.fillText("Predicted", startX + size / 2 - 22, 16);
+
+      ctx.save();
+      ctx.translate(16, startY + size / 2 + 20);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText("Actual", 0, 0);
+      ctx.restore();
+
+      results.classNames.forEach((label, i) => {
+        ctx.fillStyle = "#10233f";
+        ctx.fillText(label, startX + i * cell + cell / 2 - 20, startY + size + 24);
+        ctx.fillText(label, startX - 56, startY + i * cell + cell / 2 + 4);
+      });
+
+      results.confusionMatrix.forEach((row, rowIndex) => {
+        row.forEach((value, colIndex) => {
+          const intensity = value / maxValue;
+          ctx.fillStyle = `rgba(29, 78, 216, ${0.12 + intensity * 0.75})`;
+          ctx.fillRect(startX + colIndex * cell, startY + rowIndex * cell, cell - 4, cell - 4);
+          ctx.fillStyle = intensity > 0.55 ? "#ffffff" : "#10233f";
+          ctx.font = "bold 22px Segoe UI";
+          ctx.fillText(String(value), startX + colIndex * cell + cell / 2 - 8, startY + rowIndex * cell + cell / 2 + 8);
+        });
+      });
+    }
+
+    window.addEventListener("load", () => {
+      drawBarChart();
+      drawMatrixChart();
+    });
+
+    window.addEventListener("resize", () => {
+      drawBarChart();
+      drawMatrixChart();
+    });
+  </script>
+</body>
+</html>
